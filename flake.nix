@@ -26,7 +26,9 @@
           rust-analyzer
         ];
 
-        buildInputs = with pkgs; [];
+        buildInputs = with pkgs; [
+            nixpkgs-review
+        ];
       in {
         devShells.default = pkgs.mkShell {inherit nativeBuildInputs buildInputs;};
 
