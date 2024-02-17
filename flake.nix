@@ -1,5 +1,5 @@
 {
-  description = "Rust Template";
+  description = "A self hostable nixpkgs update bot";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -31,7 +31,7 @@
         devShells.default = pkgs.mkShell {inherit nativeBuildInputs buildInputs;};
 
         packages.default = pkgs.rustPlatform.buildRustPackage rec {
-          name = "projectname"; # Same that is in Cargo.toml
+          name = "warden"; # Same that is in Cargo.toml
           src = ./.;
           cargoLock = {
             lockFile = ./Cargo.lock;
