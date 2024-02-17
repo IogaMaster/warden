@@ -2,7 +2,7 @@
 <!--     <img src="./assets/logos/Neovim.png" width=256 alt="warden">&#x200B; -->
 <!-- </h1> -->
 <h2 align="center">
-    A self hostable nixpkgs update bot
+    A self hostable nixpkgs review bot
 </h2>
 
 <h1 align="center">
