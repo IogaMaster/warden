@@ -28,6 +28,9 @@
 
         buildInputs = with pkgs; [
             nixpkgs-review
+            nixpkgs-hammering
+            statix
+            deadnix
         ];
       in {
         devShells.default = pkgs.mkShell {inherit nativeBuildInputs buildInputs;};
