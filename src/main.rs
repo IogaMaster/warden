@@ -35,11 +35,14 @@ async fn main() {
         }
     };
 
+
     let nixpkgs_source = Temp::new_dir().unwrap();
     
     let pr_branch = nixpkgs.get(pr_num.parse::<u64>().unwrap()).await.unwrap().head.ref_field;
     let pr_repo = nixpkgs.get(pr_num.parse::<u64>().unwrap()).await.unwrap().head.repo.unwrap().html_url.unwrap();
+    let pr_commits_num = nixpkgs.get(pr_num.parse::<u64>().unwrap()).await.unwrap().commits.unwrap();
 
+    println!("{}", pr_commits_num);
     let output = Command::new("git")
         // Clone the forked nixpkgs repo
         .arg("clone")
@@ -57,5 +60,10 @@ async fn main() {
         .output()
         .expect("Failed to clone nixpkgs fork!!!");
 
-    println!("{:#?}", checks::statix::check(changed_packages, &nixpkgs_source).await);
+   let statix_diffs = checks::statix::check(&changed_packages, &nixpkgs_source).await;
+   let deadnix_diffs = checks::deadnix::check(&changed_packages, &nixpkgs_source).await;
+   let nixpkgs_hammering_logs = checks::hammering::check(&nixpkgs_source, &pr_commits_num).await;
+   let nix_build_logs = checks::build::check(&nixpkgs_source, &pr_commits_num).await;
+   
+   println!("{:#?}", nix_build_logs)
 }

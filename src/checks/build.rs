@@ -22,21 +22,33 @@ pub async fn check(nixpkgs_source: &Path, num_commits: &u64) -> Vec<String> {
             packages.push(pkg_name.to_string());
         }
     }
+
     
-    let mut hammer_logs: Vec<String> = vec![];
+    let mut build_logs: Vec<String> = vec![];
     
     for pkg in packages {
-        let output = Command::new("nixpkgs-hammer")
+        let output = Command::new("nix")
             .current_dir(&nixpkgs_source.as_os_str())
             .env("NIXPKGS_ALLOW_UNFREE", "1")
             .env("NIXPKGS_ALLOW_BROKEN", "1")
             .env("NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM", "1")
-            .arg(pkg)
+            .arg("build")
+            .arg("--rebuild")
+            .arg(format!(".#{}", pkg))
+            .arg("-L")
             .output()
-            .expect("Failed to execute nixpkgs-hammer");
-        hammer_logs.push(from_utf8(&output.stdout).unwrap().to_string())
-    }
+            .expect("Failed to execute nix build");
+        build_logs.push(from_utf8(&output.stdout).unwrap().to_string());
 
-    hammer_logs
+        let store_path = Command::new("nix")
+            .current_dir(&nixpkgs_source.as_os_str())
+            .arg("build")
+            .arg(format!(".#{}", pkg))
+            .arg("--print-out-paths")
+            .output()
+            .expect("Failed to get store path");
+    }
+    
+    build_logs
 }
 

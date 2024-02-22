@@ -2,7 +2,7 @@ use std::path::Path;
 use std::process::Command;
 use std::str::from_utf8;
 
-pub async fn check(files: Vec<String>, nixpkgs_source: &Path) -> Vec<String> {
+pub async fn check(files: &Vec<String>, nixpkgs_source: &Path) -> Vec<String> {
     let mut diffs: Vec<String> = vec![];
 
     for file in files {
