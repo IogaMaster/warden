@@ -8,12 +8,11 @@ pub async fn create_report(files: &Vec<String>, nixpkgs_source: &Path) -> Option
     for file in files {
         let output = Command::new("statix")
             .current_dir(&nixpkgs_source.as_os_str())
-            .arg("fix")
-            .arg("-d")
+            .arg("check")
             .arg(file)
             .output()
-            .expect("Failed to execute statix");
-        let diff_string = from_utf8(&output.stdout).unwrap();
+            .expect("Failed to execute statix").stdout;
+        let diff_string = from_utf8(&output).unwrap();
         if diff_string == "" {
             continue;
         }
@@ -21,7 +20,7 @@ pub async fn create_report(files: &Vec<String>, nixpkgs_source: &Path) -> Option
     } 
 
     if diffs.last().is_some() {
-        Some(format!("\n## Statix diffs:\n```diff\n{}```", diffs.join("```\n ```diff\n")))
+        Some(format!("\n## Statix:\n```console\n{}```", diffs.join("```\n ```console\n")))
     } else {
         None
     }

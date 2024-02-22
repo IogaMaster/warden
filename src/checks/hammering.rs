@@ -38,7 +38,7 @@ pub async fn check(nixpkgs_source: &Path, num_commits: &u64) -> Option<String> {
         if diff_string == "" {
             continue;
         }
-        hammer_logs.push(format!("{}:\n{}", pkg, diff_string))
+        hammer_logs.push(format!("{}", diff_string))
     }
     if hammer_logs.last().is_some() {
         Some(format!("## `nixpkgs-hammer` report: \n\n{}", hammer_logs.join("\n")))

@@ -63,12 +63,13 @@ async fn main() {
    let deadnix_diffs = checks::deadnix::check(&changed_packages, &nixpkgs_source).await;
    let nixpkgs_hammering_logs = checks::hammering::check(&nixpkgs_source, &pr_commits_num).await;
    let nix_build_logs = checks::build::check(&nixpkgs_source, &pr_commits_num).await;
+   let lint_logs = checks::lint::check(&nixpkgs_source, &pr_commits_num).await;
    
-   let report = create_report(statix_diffs, deadnix_diffs, nixpkgs_hammering_logs, nix_build_logs);
+   let report = create_report(statix_diffs, deadnix_diffs, nixpkgs_hammering_logs, nix_build_logs, lint_logs);
    println!("{report}")
 }
 
-fn create_report(statix_diffs: Option<String>, deadnix_diffs: Option<String>, nixpkgs_hammering_logs: Option<String>, nix_build_logs: Option<String>) -> String {
+fn create_report(statix_diffs: Option<String>, deadnix_diffs: Option<String>, nixpkgs_hammering_logs: Option<String>, nix_build_logs: Option<String>, lint_logs: Option<String>) -> String {
 
     let mut package_report = String::new();
     let mut basic_lint_report = String::new();
@@ -117,16 +118,21 @@ fn create_report(statix_diffs: Option<String>, deadnix_diffs: Option<String>, ni
         Some(s) => s,
         None => "".to_string(),
     };
+    let lint_report = match lint_logs {
+        Some(s) => s,
+        None => "".to_string(),
+    };
 
-    if nixpkgs_hammering_report != "" {
+    if nixpkgs_hammering_report != "" && lint_report != "" {
         advanced_lint_report = format!(r"
-<details><summary>`nixpkgs-hammering` Lints</summary>
+<details><summary>Special Lints</summary>
 <p>
 
 {}
+{}
 
 </p>
-</details>", nixpkgs_hammering_report);
+</details>", nixpkgs_hammering_report, lint_report);
     }
 
     String::from(format!(r"

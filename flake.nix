@@ -35,7 +35,7 @@
             nixpkgs-hammering
             statix
             deadnix
-            eza
+            nixpkgs-lint
         ];
       in {
         devShells.default = pkgs.mkShell {inherit nativeBuildInputs buildInputs;};
