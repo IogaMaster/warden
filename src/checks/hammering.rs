@@ -2,8 +2,7 @@ use std::path::Path;
 use std::process::Command;
 use std::str::from_utf8;
 
-
-pub async fn check(nixpkgs_source: &Path, num_commits: &u64) -> Vec<String> {
+pub async fn check(nixpkgs_source: &Path, num_commits: &u64) -> Option<String> {
     let mut packages: Vec<String> = vec![];
 
     let git_log = Command::new("git")
@@ -31,12 +30,20 @@ pub async fn check(nixpkgs_source: &Path, num_commits: &u64) -> Vec<String> {
             .env("NIXPKGS_ALLOW_UNFREE", "1")
             .env("NIXPKGS_ALLOW_BROKEN", "1")
             .env("NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM", "1")
-            .arg(pkg)
+            .arg(&pkg)
             .output()
             .expect("Failed to execute nixpkgs-hammer");
-        hammer_logs.push(from_utf8(&output.stdout).unwrap().to_string())
-    }
 
-    hammer_logs
+        let diff_string = from_utf8(&output.stdout).unwrap();
+        if diff_string == "" {
+            continue;
+        }
+        hammer_logs.push(format!("{}:\n{}", pkg, diff_string))
+    }
+    if hammer_logs.last().is_some() {
+        Some(format!("## `nixpkgs-hammer` report: \n\n{}", hammer_logs.join("\n")))
+    } else {
+        None
+    }
 }
 

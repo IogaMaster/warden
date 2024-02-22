@@ -1,6 +1,6 @@
 mod checks;
 
-use std::{collections::HashMap, env, error::Error, process::{exit, Command}, borrow::Borrow};
+use std::{borrow::Borrow, collections::HashMap, env, error::Error, fmt::format, process::{exit, Command}};
 
 use mktemp::Temp;
 use octocrab::models::pulls::FileDiff;
@@ -42,7 +42,6 @@ async fn main() {
     let pr_repo = nixpkgs.get(pr_num.parse::<u64>().unwrap()).await.unwrap().head.repo.unwrap().html_url.unwrap();
     let pr_commits_num = nixpkgs.get(pr_num.parse::<u64>().unwrap()).await.unwrap().commits.unwrap();
 
-    println!("{}", pr_commits_num);
     let output = Command::new("git")
         // Clone the forked nixpkgs repo
         .arg("clone")
@@ -60,10 +59,81 @@ async fn main() {
         .output()
         .expect("Failed to clone nixpkgs fork!!!");
 
-   let statix_diffs = checks::statix::check(&changed_packages, &nixpkgs_source).await;
+   let statix_diffs = checks::statix::create_report(&changed_packages, &nixpkgs_source).await;
    let deadnix_diffs = checks::deadnix::check(&changed_packages, &nixpkgs_source).await;
    let nixpkgs_hammering_logs = checks::hammering::check(&nixpkgs_source, &pr_commits_num).await;
    let nix_build_logs = checks::build::check(&nixpkgs_source, &pr_commits_num).await;
    
-   println!("{:#?}", nix_build_logs)
+   let report = create_report(statix_diffs, deadnix_diffs, nixpkgs_hammering_logs, nix_build_logs);
+   println!("{report}")
+}
+
+fn create_report(statix_diffs: Option<String>, deadnix_diffs: Option<String>, nixpkgs_hammering_logs: Option<String>, nix_build_logs: Option<String>) -> String {
+
+    let mut package_report = String::new();
+    let mut basic_lint_report = String::new();
+    let mut advanced_lint_report = String::new();
+
+    let nix_build_report = match nix_build_logs {
+        Some(s) => s,
+        None => "".to_string(),
+    };
+
+    if nix_build_report != "" {
+        package_report = format!(r"
+<details><summary>Packages built</summary>
+<p>
+
+{}
+
+</p>
+</details>", nix_build_report);
+    }
+
+    let statix_report = match statix_diffs {
+        Some(s) => s,
+        None => "".to_string(),
+    };
+
+    let deadnix_report = match deadnix_diffs {
+        Some(s) => s,
+        None => "".to_string(),
+    };
+
+    if statix_report != "" && deadnix_report != "" {
+        basic_lint_report = format!(r"
+<details><summary>Basic Lints</summary>
+<p>
+
+{}
+{}
+
+</p>
+</details>", statix_report, deadnix_report);
+    }
+
+
+    let nixpkgs_hammering_report = match nixpkgs_hammering_logs {
+        Some(s) => s,
+        None => "".to_string(),
+    };
+
+    if nixpkgs_hammering_report != "" {
+        advanced_lint_report = format!(r"
+<details><summary>`nixpkgs-hammering` Lints</summary>
+<p>
+
+{}
+
+</p>
+</details>", nixpkgs_hammering_report);
+    }
+
+    String::from(format!(r"
+This review has been done with [warden](https://github.com/iogamaster/warden), please report any issues!
+
+{} 
+{}
+{}
+", package_report, basic_lint_report, advanced_lint_report))
 }

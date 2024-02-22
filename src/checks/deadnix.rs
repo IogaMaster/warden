@@ -2,7 +2,7 @@ use std::path::Path;
 use std::process::Command;
 use std::str::from_utf8;
 
-pub async fn check(files: &Vec<String>, nixpkgs_source: &Path) -> Vec<String> {
+pub async fn check(files: &Vec<String>, nixpkgs_source: &Path) -> Option<String> {
     let mut diffs: Vec<String> = vec![];
 
     for file in files {
@@ -18,8 +18,12 @@ pub async fn check(files: &Vec<String>, nixpkgs_source: &Path) -> Vec<String> {
             .arg("diff")
             .arg("HEAD")
             .output()
-            .expect("Failed to execute git").stdout;
-        diffs.push(format!("{}", from_utf8(&git_diff).unwrap()));
+            .expect("Failed to execute git");
+        let diff_string = from_utf8(&output).unwrap();
+        if diff_string == "" {
+            continue;
+        }
+        diffs.push(diff_string.to_string());
         let git_reset = Command::new("git")
             .current_dir(&nixpkgs_source.as_os_str())
             .arg("reset")
@@ -28,5 +32,10 @@ pub async fn check(files: &Vec<String>, nixpkgs_source: &Path) -> Vec<String> {
             .output()
             .expect("Failed to execute git").stdout;
     }
-    diffs
+
+    if diffs.last().is_some() {
+        Some(format!("\n## Deadnix diffs:\n```diff\n{}```", diffs.join("```\n ```diff\n")))
+    } else {
+        None
+    }
 }
