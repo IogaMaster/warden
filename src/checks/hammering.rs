@@ -1,6 +1,5 @@
 use std::path::Path;
-use std::process::Command;
-use std::str::from_utf8;
+use std::process::Command; use std::str::from_utf8;
 
 pub async fn check(nixpkgs_source: &Path, num_commits: &u64) -> Option<String> {
     let mut packages: Vec<String> = vec![];
@@ -41,6 +40,7 @@ pub async fn check(nixpkgs_source: &Path, num_commits: &u64) -> Option<String> {
         hammer_logs.push(format!("{}", diff_string))
     }
     if hammer_logs.last().is_some() {
+        println!("{}", format!("## `nixpkgs-hammer` report: \n\n{}", hammer_logs.join("\n")));
         Some(format!("## `nixpkgs-hammer` report: \n\n{}", hammer_logs.join("\n")))
     } else {
         None

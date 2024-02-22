@@ -5,8 +5,7 @@ use std::{borrow::Borrow, collections::HashMap, env, error::Error, fmt::format, 
 use mktemp::Temp;
 use octocrab::models::pulls::FileDiff;
 
-#[tokio::main]
-async fn main() {
+#[tokio::main] async fn main() {
     let args: Vec<String> = env::args().collect();
 
     let mut pr_num: String = String::new();
