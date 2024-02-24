@@ -14,6 +14,12 @@ pub async fn check(nixpkgs_source: &Path, num_commits: &u64) -> Option<String> {
         .output()
         .expect("Failed to execute git");
 
+    let nix_info = Command::new("nix-info")
+        .current_dir(&nixpkgs_source.as_os_str())
+        .arg("-m")
+        .output()
+        .expect("Failed to execute nix-info");
+
 
     for commit in from_utf8(&git_log.stdout).unwrap().lines() {
         if commit.contains("init") || commit.contains("->") {
@@ -40,7 +46,7 @@ pub async fn check(nixpkgs_source: &Path, num_commits: &u64) -> Option<String> {
     }
 
     if build_logs.last().is_some() {
-        Some(format!("{}", build_logs.join("\n\n")))
+        Some(format!("{}\n\n### `nix-info -m` \n{}", format!("{}", build_logs.join("\n\n")), from_utf8(&nix_info.stdout).unwrap().to_string()))
     } else {
         None
     }
