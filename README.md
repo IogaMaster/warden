@@ -27,3 +27,16 @@
         <img href="https://builtwithnix.org" src="https://builtwithnix.org/badge.svg"/>
    </h1>
    <br>
+   
+Things warden already does:
+- [ ] Build all packages updated/added in a pr (by parsing commits)
+- [ ] Run statix and deadnix on all code
+- [ ] Run nixpkgs-lint for all packages update/added in a pr (by parsing commits)
+- [ ] Summarize the information
+
+Things to do:
+- [ ] Make it an actual bot
+- [ ] Verify passthru.tests https://github.com/IogaMaster/warden/issues/1
+- [ ] Clean up the codebase
+- [ ] Allow for reviewing HEAD of the current repo
+- [ ] Use the new version of nixpkgs-lint
