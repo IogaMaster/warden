@@ -30,18 +30,18 @@
           rust-analyzer
         ];
 
-        buildInputs = with pkgs; [
+        runtimeDeps = with pkgs; [
             nixpkgs-review
             nixpkgs-hammering
             statix
             deadnix
         ];
       in {
-        devShells.default = pkgs.mkShell {inherit nativeBuildInputs buildInputs;};
+        devShells.default = pkgs.mkShell {inherit nativeBuildInputs runtimeDeps;};
 
         packages.default = naersk'.buildPackage {
             src = ./.;
-            inherit nativeBuildInputs buildInputs;
+            inherit nativeBuildInputs runtimeDeps;
         };
       }
     );
