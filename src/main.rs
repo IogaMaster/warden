@@ -1,4 +1,5 @@
 mod checks;
+mod tests;
 
 use std::{borrow::Borrow, collections::HashMap, env, error::Error, fmt::format, process::{exit, Command}};
 
