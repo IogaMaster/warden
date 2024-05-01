@@ -1,0 +1,79 @@
+name: Docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Image
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v4
+
+      - name: Run build
+        id: build
+        run: |
+          nix build \
+            --fallback \
+            --print-build-logs \
+            '.#container'
+
+          # sanity check for build output
+          [ ! -L result ] && exit 1
+          echo "path=$(readlink -f ./result)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload image
+        uses: actions/upload-artifact@v4
+        with:
+          name: container
+          path: ${{ steps.build.outputs.path }}
+          if-no-files-found: error
+          retention-days: 5
+
+  push:
+    name: Push image
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+
+    env:
+      REGISTRY: ghcr.io
+      USERNAME: ${{ github.actor }}
+
+    steps:
+      - name: Set image name
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Download image
+        uses: actions/download-artifact@v4
+
+      - name: Login to ${{ env.REGISTRY }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.USERNAME }}
+          password: ${{ github.token }}
+
+      - name: Upload to ${{ env.REGISTRY }}
+        env:
+          TAG: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        run: |
+          docker load < container/*.tar.gz
+          docker tag warden:latest "$TAG"
+          docker push "$TAG"
