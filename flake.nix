@@ -4,44 +4,31 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-
-    naersk.url = "github:nix-community/naersk";
-    rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
   outputs = {
+    self,
     nixpkgs,
-    rust-overlay,
     flake-utils,
-    naersk,
-    ...
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        overlays = [(import rust-overlay)];
-        pkgs = import nixpkgs {
-          inherit system overlays;
+        pkgs = nixpkgs.legacyPackages.${system};
+      in rec {
+        devShells.default = pkgs.mkShell {
+          packages = with pkgs; [
+            rust-analyzer
+          ];
+
+          inputsFrom = [ packages.warden ];
         };
-        
-        naersk' = pkgs.callPackage naersk {};
 
-        nativeBuildInputs = with pkgs; [
-          rust-bin.stable.latest.default
-          rust-analyzer
-        ];
+        packages = {
+          warden = pkgs.callPackage ./nix/package.nix {
+            version = self.shortRev or self.dirtyShortRev or "unknown";
+          };
 
-        buildInputs = with pkgs; [
-            nixpkgs-review
-            nixpkgs-hammering
-            statix
-            deadnix
-        ];
-      in {
-        devShells.default = pkgs.mkShell {inherit nativeBuildInputs buildInputs;};
-
-        packages.default = naersk'.buildPackage {
-            src = ./.;
-            inherit nativeBuildInputs buildInputs;
+          default = packages.warden;
         };
       }
     );
