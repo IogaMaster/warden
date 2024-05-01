@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v4
+
+      - name: Check flake
+        run: |
+          nix flake check \
+            --print-build-logs \
+            --show-trace
+
+      - name: Run build
+        run: |
+          nix build \
+            --fallback \
+            --print-build-logs
