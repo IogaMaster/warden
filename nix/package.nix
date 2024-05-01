@@ -1,5 +1,7 @@
 {
   lib,
+  stdenv,
+  darwin,
   rustPlatform,
   nixpkgs-review,
   nixpkgs-hammering,
@@ -30,5 +32,7 @@ rustPlatform.buildRustPackage {
     nixpkgs-hammering
     statix
     deadnix
+  ] ++ lib.optionals stdenv.isDarwin [
+    darwin.apple_sdk.frameworks.Security
   ];
 }
