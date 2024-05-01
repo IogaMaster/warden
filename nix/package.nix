@@ -35,4 +35,12 @@ rustPlatform.buildRustPackage {
   ] ++ lib.optionals stdenv.isDarwin [
     darwin.apple_sdk.frameworks.Security
   ];
+
+  meta = with lib; {
+    description = "A self hostable nixpkgs review bot";
+    homepage = "https://github.com/IogaMaster/warden";
+    license = licenses.mit;
+    maintainers = with maintainers; [ iogamaster ];
+    mainProgram = "warden";
+  };
 }
