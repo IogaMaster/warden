@@ -28,6 +28,10 @@
             version = self.shortRev or self.dirtyShortRev or "unknown";
           };
 
+          container = pkgs.callPackage ./nix/docker.nix {
+            inherit (packages) warden;
+          };
+
           default = packages.warden;
         };
       }
