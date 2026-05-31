@@ -1,46 +1,41 @@
 {
   lib,
-  stdenv,
-  darwin,
-  rustPlatform,
+  nix,
   nixpkgs-review,
+  nixpkgs-lint-community,
   nixpkgs-hammering,
   statix,
   deadnix,
-  version ? (lib.importTOML ../Cargo.toml).package.version,
+  gh,
+  python3Packages,
+  version ? "latest",
 }:
-rustPlatform.buildRustPackage {
+python3Packages.buildPythonApplication {
   pname = "warden";
   inherit version;
+  pyproject = true;
 
-  src = lib.fileset.toSource {
-    root = ../.;
-    fileset = lib.fileset.unions [
-      ../src
-      ../Cargo.toml
-      ../Cargo.lock
-    ];
-  };
+  src = ../.;
 
-  cargoLock = {
-    lockFile = ../Cargo.lock;
-    allowBuiltinFetchGit = true;
-  };
+  build-system = [ python3Packages.setuptools ];
 
-  buildInputs = [
-    nixpkgs-review
-    nixpkgs-hammering
-    statix
-    deadnix
-  ] ++ lib.optionals stdenv.isDarwin [
-    darwin.apple_sdk.frameworks.Security
+  propagatedBuildInputs = [
+    python3Packages.click
   ];
 
-  meta = with lib; {
-    description = "A self hostable nixpkgs review bot";
-    homepage = "https://github.com/IogaMaster/warden";
-    license = licenses.mit;
-    maintainers = with maintainers; [ iogamaster ];
-    mainProgram = "warden";
-  };
+  makeWrapperArgs = [
+    "--prefix"
+    "PATH"
+    ":"
+    (lib.makeBinPath [
+      nix
+      nixpkgs-review
+      nixpkgs-lint-community
+      nixpkgs-hammering
+      statix
+      deadnix
+      gh
+    ])
+  ];
+
 }

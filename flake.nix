@@ -6,18 +6,20 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    flake-utils,
-  }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
     flake-utils.lib.eachDefaultSystem (
-      system: let
+      system:
+      let
         pkgs = nixpkgs.legacyPackages.${system};
-      in rec {
+      in
+      rec {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
-            rust-analyzer
           ];
 
           inputsFrom = [ packages.warden ];
